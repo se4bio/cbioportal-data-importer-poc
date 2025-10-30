@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS staging.stage_data_cancer_type
     type_of_cancer String,
     name Nullable(String),
     dedicated_color Nullable(String),
+    short_name Nullable(String),
     parent_type_of_cancer Nullable(String),
     stage_meta_id String
 )
