@@ -18,3 +18,11 @@ It loads data to the staging zone in the database with minimal transformations t
 - does converting uuids from String to UUID will help performance of joins?
 - add support for data_driver_annotations, resources and study tags
 - test mutsig. I did not find data to test it
+
+## IDEAS
+- to progress through vaidation and publishing, we can use MVs that are triggered by appending a new update to the import status table. The finishing of one stage could trigger another.
+- we can introduce an api that hides aspects of batch and meta UUID generations and updtating the import status table 
+   - start batch session call: client can submit meta infos in one request and get all UUIDs (batch, meta) back. meta ids - could be associated with different urls if user want's to update a certain aspect (e.g. clinical variable definition or clinical variable values only)
+   - after that client can upload (stream) a file per request for each url+ meta UUID. The file shape of defined form per resource. Multiple files could be supported (plain tab separated, parquet). potentially these data resources could be extended without need to prior call to start a batch session. Then finishing will be done right after the call.
+   - after user is done with uploading everything in sthe batch session, he calls the finish call
+   - after the finish call the validation-publishing change will take place. User can observe the status by triggering the status call.
