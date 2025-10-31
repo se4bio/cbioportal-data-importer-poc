@@ -2,6 +2,25 @@
 
 It loads data to the staging zone in the database with minimal transformations to do the rest of operations there (kinda ELT)
 
+## Run
+
+1. Copy `.env.example` file to `.env` and modify it according with your DB creds.
+2. Stage study(ies)
+
+```bash
+./stage.sh ../path/to/study_folder/
+```
+
+This command loads all found meta and data files to the staging database. The command also creates such database if not exists.
+
+3. Publish staged data.
+
+```bash
+./publish.sh <change set uuid>
+```
+
+This commands moves all data from staging zone to production tables.
+
 ## TODO
 - **Test with more data types.**  
   For example, the `sample_id` column in protein-level data appears blank in the database.  
