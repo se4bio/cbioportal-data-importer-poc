@@ -43,7 +43,7 @@ header_read == 0 {
     for (i = 1; i <= num_cols; i++) {
         # skip ID columns
         if (i == patient_col || (has_sample && i == sample_col)) continue;
-
+        if ($i == "[Not Available]" || $i == "NA") continue;
         if (has_sample)
             print patient, sample, H[i], $i, sid;
         else
