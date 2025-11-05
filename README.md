@@ -53,13 +53,13 @@ All major transformations (the *publish* step) will eventually be executed by **
 ---
 
 ### Single Source of Business Logic
-- The **ingestion API** will be part of the web application and reuse the **business logic already implemented** there.
+- The **publishing** will be part of the web application and reuse the **business logic already implemented** there.
 
 ---
 
 ### No Direct or Uncontrolled Data Modifications
 - The importer will **not write directly** to production tables.  
-- All transformations and data validation will happen during the **publishing phase** within cBioPortal, ensuring traceability and consistency.
+- All transformations and data validation will happen during the **publishing phase** within cBioPortal, ensuring that operations are authorised and make sense.
 
 ---
 
