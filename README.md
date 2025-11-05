@@ -1,6 +1,72 @@
-# cBioPortal data importer POC
+# New cBioPortal data importer POC
 
-It loads data to the staging zone in the database with minimal transformations to do the rest of operations there (kinda ELT)
+## Issues with the current importer
+
+Current cBioPortal importer (`cbioportal-core`) has a number of other potential issues beyond technical complexity and slowness that we should be aware of while implementing the new importer.
+
+Not all improvements can be achieved within the scope of RFC100, but we should avoid decisions that would make future improvements more difficult.
+
+### Shared database schema as an “API” between importer and cBioPortal web app
+
+Our current schema is in flux. As a community, we are still exploring what the optimal schema should be to take full advantage of column-based databases like ClickHouse. This process will take time and involve multiple iterations.
+
+When the database schema is shared between the importer and the web app, any schema redesign becomes more difficult, as both projects—the web application and the importer transformations—must be updated simultaneously.
+On the deployment side, each version of the importer must match the corresponding version of cBioPortal to ensure compatibility after every schema change.
+
+The situation becomes even more complex if the schema is also exposed to importer users. In that case, users could supply data files matching the schema directly, alongside the current cBioPortal flat file format.
+Exposing the schema to users introduces versioning challenges—we would need to either enforce strict backward compatibility or provide migration scripts for all schema versions.
+(We’ll need to handle schema migrations within the database anyway, so this would duplicate that effort.)
+
+### Two versions of business logic
+
+Beyond the shared schema, which enforces data shape and types, additional business logic (e.g., data constraints) must also be implemented in code.
+This creates the risk of maintaining two versions of the same logic: one in the importer and another in the web application. And they can mismatch.
+
+### Unconditional access rights
+
+The importer currently has unrestricted access to the shared schema—and with great power comes great responsibility.
+Some of these permissions (such as dropping tables) can and should be revoked at the database user level.
+However, it’s much harder to enforce domain-specific sanity checks at this level. For example:
+
+Loading a new study should not affect data from existing studies.
+
+Application-specific authorization rules cannot easily be enforced within the database.
+
+These limitations and risks become particularly apparent in a multi-organizational cBioPortal instance, where multiple data owners may upload their data independently.
+
+### Concurrent imports
+
+The current importer only partially supports concurrent imports—they are possible when transactions span multiple data type uploads.
+In the future, concurrent imports will likely become more important, as multiple data managers may need to upload data to the same instance simultaneously.
+
+## How the Approach in This POC Addresses the Issues
+
+I built this proof of concept (POC) to load data into a **staging zone** within the database, applying only minimal transformations — following an **ELT-style** pattern.  
+All major transformations (the *publish* step) will eventually be executed by **cBioPortal**, and the importer itself will remain schema-agnostic.
+
+---
+
+### Easier Schema Changes
+- The **staging** schema (stable) and **production** schema (subject to change) are separated.  
+- When production schema changes occur, **no modifications** to the importer are required.
+
+---
+
+### Single Source of Business Logic
+- The **ingestion API** will be part of the web application and reuse the **business logic already implemented** there.
+
+---
+
+### No Direct or Uncontrolled Data Modifications
+- The importer will **not write directly** to production tables.  
+- All transformations and data validation will happen during the **publishing phase** within cBioPortal, ensuring traceability and consistency.
+
+---
+
+### Safe Concurrent Execution
+- The **staging process** can run concurrently and in parallel without issues.  
+- **Validation and publishing** steps will be **queued** and executed sequentially to maintain data integrity.
+
 
 ## Run
 
